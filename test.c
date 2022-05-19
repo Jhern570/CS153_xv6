@@ -14,6 +14,7 @@ int main() {
     set_prior(0);
     int i = 0;
     int pid = 0;
+
     for(i = 0; i < 3; i++) {
         pid = fork();
         if(!pid) {
@@ -24,8 +25,7 @@ int main() {
         }
     }
     if(pid) {
-        for(i = 0; i < 3; i++)
-            wait();
+        for(i = 0; i < 3; i++)wait();
     }
     printf(0, "parent %d done\n", getpid());
     exit();
