@@ -25,7 +25,6 @@ int sleep(int);
 int uptime(void);
 int hello(void);
 int waitpid(int pid, int* status, int options);
-int set_prior(int prior_lvl);
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);

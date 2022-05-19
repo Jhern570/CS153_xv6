@@ -122,7 +122,6 @@ void            wakeup(void*);
 void            yield(void);
 void            hello(void);
 int             waitpid(int pid, int* status, int options);
-int             set_prior(int prior_lvl);
 // swtch.S
 void            swtch(struct context**, struct context*);
 

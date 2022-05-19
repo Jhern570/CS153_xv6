@@ -112,7 +112,6 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
-  p->prior_value = 0;
 
   return p;
 }
@@ -151,7 +150,6 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
-  p->start_time = ticks;
   release(&ptable.lock);
 }
 
@@ -264,10 +262,7 @@ exit(int status)
 
 
   curproc->exit_status = status; // ADDED FOR LAB1
-  int finish_time = ticks;
-  int tt = finish_time - p->prior_value;
-  int wt = tt - p->burst_time;
-  cprintf("Turnaround time = %d\nWaiting time = %d\n", tt, wt);
+
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();
@@ -334,8 +329,6 @@ scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
-  int highprior = 32;
-  int enter_cpu;
   c->proc = 0;
   
   for(;;){
@@ -344,7 +337,7 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    /*for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
 
@@ -362,44 +355,7 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       c->proc = 0;
     }
-    release(&ptable.lock);*/
-
-    //obtain the highest priority value
-    for(p = ptable.proc; p < &table.proc[NPROC]; p++){
-        if(p->state == RUNNABLE && p->prior_value < highprior){
-            highprior = p->prior_value;
-        }
-    }
-
-    //find the process with the highest priority
-    for(p = ptable.proc; p < &table.proc[NPROC]; p++){
-        if(p->state != RUNNABLE){
-            continue;
-        }
-        if(p->prior_value != highprior){
-            if(p->prior_value > 0){
-                p->priority--;
-            }
-            continue;
-        }
-
-        // Switch to chosen process.  It is the process's job
-        // to release ptable.lock and then reacquire it
-        // before jumping back to us.
-        c->proc = p;
-        switchuvm(p);
-        p->state = RUNNING;
-        p->prior_value++;
-        enter_cpu = ticks;
-        swtch(&(c->scheduler), p->context);
-        p->burst_time = ticks - enter_cpu;
-        switchkvm();
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-    }
-    release(&ptable.lock)
+    release(&ptable.lock);
   }
 }
 
@@ -629,16 +585,3 @@ waitpid(int pid, int* status, int options){
     }
 }
 
-int
-set_prior(int prior_lvl){
-    struct proc* p = myproc();
-
-    if(prior_lvl < 0)
-        p->prio_lvl = 0;
-    else if(prior_lvl > 31)
-        p->prior_value = 31;
-    else
-        p->prior_value = prior_lvl;
-
-    return 0;
-}
